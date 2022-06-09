@@ -8,7 +8,7 @@ services:
       context: ./nginx
       dockerfile: Dockerfile
     ports:
-      - "8000:80"
+      - '${BACKEND_EXPOSE}:80'
     volumes:
       - ../src:/var/www/project
       - ./nginx/log:/var/log/nginx
@@ -21,7 +21,7 @@ services:
       context: ./redis
       dockerfile: Dockerfile
     ports:
-      - "6379:6379"
+      - '${REDIS_EXPOSE}:6379'
     networks:
       - app-network
   mysql:
@@ -31,12 +31,26 @@ services:
       dockerfile: Dockerfile
     tty: true
     ports:
-      - "43306:3306"
+      - '${MYSQL_EXPOST}:3306'
     environment:
-      MYSQL_DATABASE: football
-      MYSQL_USER: user      
-      MYSQL_PASSWORD: secret
-      MYSQL_ROOT_PASSWORD: root@secret123
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - ./mysql/dbdata:/var/lib/mysql
+    networks:
+      - app-network
+  phpmyadmin:
+    container_name: 'phpmyadmin_${APP_NAME}'
+    image: phpmyadmin
+    restart: always
+    ports:
+      - '${PHPMYADMIN_EXPOSE}:80'
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
     networks:
       - app-network
   node:
@@ -48,7 +62,7 @@ services:
       - '../fe:/usr/src/app'
       - '/app/node_modules'
     ports:
-      - 3000:3000
+      - '${FRONTEND_EXPOSE}:3000'
     stdin_open: true
     tty: true
     environment:
@@ -56,3 +70,6 @@ services:
     command: npm start
     networks:
       - app-network
+
+volumes:
+  dbdata:
